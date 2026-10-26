@@ -1,38 +1,81 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ course.name }}</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
 </head>
 <body class="bg-light">
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-  <div class="container"><a class="navbar-brand" href="/">OnlineCourse</a></div>
+  <a class="navbar-brand" href="{% url 'onlinecourse:index' %}">OnlineCourse</a>
+  <div class="ml-auto text-white">
+    {% if user.is_authenticated %}
+      {{ user.username }} · <a class="text-white" href="{% url 'onlinecourse:logout' %}">Logout</a>
+    {% else %}
+      <a class="text-white" href="{% url 'onlinecourse:login' %}">Login</a>
+    {% endif %}
+  </div>
 </nav>
-<main class="container py-5">
-  <div class="card shadow-sm">
+<main class="container py-4">
+  <div class="card shadow-sm mb-4">
     <div class="card-body">
-      <h1 class="card-title">{{ course.name }}</h1>
-      <p class="card-text">{{ course.description }}</p>
-      <h2 class="h4 mt-4">Lessons</h2>
-      {% if course.lessons.all %}
-        <div class="list-group">
-          {% for lesson in course.lessons.all %}
-            <div class="list-group-item">
-              <h3 class="h6 mb-1">{{ forloop.counter }}. {{ lesson.title }}</h3>
-              <p class="mb-0">{{ lesson.content }}</p>
-            </div>
-          {% empty %}
-            <p class="text-muted">No lessons have been added yet.</p>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p class="text-muted">No lessons have been added yet.</p>
+      <h1 class="h2">{{ course.name }}</h1>
+      <p class="text-muted">{{ course.description }}</p>
+      {% if user.is_authenticated and not is_enrolled %}
+        <a class="btn btn-primary" href="{% url 'onlinecourse:enroll' course.id %}">Enroll in course</a>
       {% endif %}
-      <a class="btn btn-primary mt-4" href="{% url 'onlinecourse:submit' course.id %}">Start exam</a>
     </div>
   </div>
+
+  <section class="card shadow-sm mb-4">
+    <div class="card-header bg-white"><h2 class="h5 mb-0">Course lessons</h2></div>
+    <div class="list-group list-group-flush">
+      {% for lesson in lessons %}
+        <article class="list-group-item">
+          <h3 class="h6">{{ forloop.counter }}. {{ lesson.title }}</h3>
+          <p class="mb-0">{{ lesson.content|linebreaksbr }}</p>
+        </article>
+      {% empty %}
+        <div class="list-group-item text-muted">No lessons have been added yet.</div>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% if is_enrolled %}
+    <section class="card shadow-sm">
+      <div class="card-header bg-white"><h2 class="h5 mb-0">Mock exam</h2></div>
+      <div class="card-body">
+        {% if questions %}
+          <form method="post" action="{% url 'onlinecourse:submit' course.id %}">
+            {% csrf_token %}
+            {% for question in questions %}
+              <fieldset class="border rounded p-3 mb-3">
+                <legend class="h6">Question {{ forloop.counter }} ({{ question.grade }} point{{ question.grade|pluralize }})</legend>
+                <p>{{ question.question_text }}</p>
+                {% for choice in question.choices.all %}
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="choice_{{ choice.id }}"
+                           name="choice_{{ question.id }}" value="{{ choice.id }}">
+                    <label class="form-check-label" for="choice_{{ choice.id }}">{{ choice.choice_text }}</label>
+                  </div>
+                {% empty %}
+                  <p class="text-muted">No choices available.</p>
+                {% endfor %}
+              </fieldset>
+            {% endfor %}
+            <button class="btn btn-success" type="submit">Submit exam</button>
+          </form>
+        {% else %}
+          <p class="text-muted mb-0">No exam questions have been added yet.</p>
+        {% endif %}
+      </div>
+    </section>
+  {% elif user.is_authenticated %}
+    <div class="alert alert-info">Enroll in this course to take the mock exam.</div>
+  {% else %}
+    <div class="alert alert-info">Please log in and enroll to take the mock exam.</div>
+  {% endif %}
 </main>
 </body>
 </html>
