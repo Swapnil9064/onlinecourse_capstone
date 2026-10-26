@@ -1,64 +1,66 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ course.name }}</title>
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ course.name }}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
 </head>
 <body class="bg-light">
-
 <nav class="navbar navbar-dark bg-primary">
-    <a class="navbar-brand" href="{% url 'onlinecourse:index' %}">
-        OnlineCourse
-    </a>
+  <a class="navbar-brand" href="{% url 'onlinecourse:index' %}">OnlineCourse</a>
 </nav>
-
-<div class="container py-4">
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <h1 class="card-title">{{ course.name }}</h1>
-            <p class="card-text">{{ course.description }}</p>
-        </div>
+<main class="container py-4">
+  <section class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h1 class="card-title">{{ course.name }}</h1>
+      <p class="card-text">{{ course.description }}</p>
     </div>
-
-    <div class="card shadow-sm mb-4">
-        <div class="card-header">
-            <h2 class="h5 mb-0">Lessons</h2>
-        </div>
-        <div class="card-body">
-            {% for lesson in course.lessons.all %}
-                <div class="border-bottom py-3">
-                    <h3 class="h6">
-                        Lesson {{ forloop.counter }}: {{ lesson.title }}
-                    </h3>
-                    <p class="mb-0">{{ lesson.content }}</p>
-                </div>
-            {% empty %}
-                <p class="text-muted">No lessons available.</p>
+  </section>
+  <section class="card shadow-sm mb-4">
+    <div class="card-header bg-white"><h2 class="h5 mb-0">Related lessons</h2></div>
+    <div class="list-group list-group-flush">
+      {% for lesson in course.lessons.all %}
+        <article class="list-group-item">
+          <h3 class="h6">{{ forloop.counter }}. {{ lesson.title }}</h3>
+          <p class="mb-0">{{ lesson.content|linebreaksbr }}</p>
+        </article>
+      {% empty %}
+        <div class="list-group-item text-muted">No lessons available.</div>
+      {% endfor %}
+    </div>
+  </section>
+  {% if user.is_authenticated and is_enrolled %}
+    <section class="card shadow-sm">
+      <div class="card-header bg-white"><h2 class="h5 mb-0">Mock exam</h2></div>
+      <div class="card-body">
+        {% if questions %}
+          <form method="post" action="{% url 'onlinecourse:submit' course.id %}">
+            {% csrf_token %}
+            {% for question in questions %}
+              <fieldset class="border rounded p-3 mb-3">
+                <legend class="h6">{{ question.question_text }}</legend>
+                {% for choice in question.choices.all %}
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="choice_{{ question.id }}" id="choice_{{ choice.id }}" value="{{ choice.id }}">
+                    <label class="form-check-label" for="choice_{{ choice.id }}">{{ choice.choice_text }}</label>
+                  </div>
+                {% endfor %}
+              </fieldset>
             {% endfor %}
-        </div>
-    </div>
-
-    {% if user.is_authenticated %}
-        {% if is_enrolled %}
-            <div class="alert alert-success">
-                You are enrolled in this course.
-            </div>
+            <button class="btn btn-success" type="submit">Submit exam</button>
+          </form>
         {% else %}
-            <a class="btn btn-primary"
-               href="{% url 'onlinecourse:enroll' course.id %}">
-                Enroll in Course
-            </a>
+          <p>No exam questions available.</p>
         {% endif %}
-    {% else %}
-        <div class="alert alert-info">
-            Please log in to enroll in this course.
-        </div>
-    {% endif %}
-</div>
-
+      </div>
+    </section>
+  {% elif user.is_authenticated %}
+    <div class="alert alert-info">Enroll in this course to take the mock exam.</div>
+    <a class="btn btn-primary" href="{% url 'onlinecourse:enroll' course.id %}">Enroll now</a>
+  {% else %}
+    <div class="alert alert-info">Log in to enroll and take the mock exam.</div>
+  {% endif %}
+</main>
 </body>
 </html>
