@@ -1,3 +1,5 @@
+from django.shortcuts import get_object_or_404, redirect, render
+from .models import Choice, Course, Enrollment, Submission
 
 def show_exam_result(request, course_id, submission_id):
     course = get_object_or_404(Course, pk=course_id)
