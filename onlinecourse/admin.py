@@ -1,5 +1,14 @@
+
 from django.contrib import admin
-from .models import Course, Lesson, Instructor, Learner, Enrollment, Question, Choice, Submission
+from .models import (
+    Course,
+    Lesson,
+    Instructor,
+    Learner,
+    Question,
+    Choice,
+    Submission,
+)
 
 
 class ChoiceInline(admin.StackedInline):
@@ -17,15 +26,6 @@ class LessonInline(admin.StackedInline):
     extra = 1
 
 
-@admin.register(Course)
-class CourseAdmin(admin.ModelAdmin):
-    inlines = [LessonInline, QuestionInline]
-    list_display = ("name", "pub_date", "total_enrollment")
-    list_filter = ("pub_date",)
-    search_fields = ("name", "description")
-
-
-@admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
     inlines = [ChoiceInline]
     list_display = ("question_text", "course", "grade")
@@ -33,27 +33,35 @@ class QuestionAdmin(admin.ModelAdmin):
     search_fields = ("question_text",)
 
 
-@admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
     list_display = ("title", "course", "order")
     list_filter = ("course",)
     search_fields = ("title", "content")
 
 
-@admin.register(Choice)
+class CourseAdmin(admin.ModelAdmin):
+    inlines = [LessonInline, QuestionInline]
+    list_display = ("name", "pub_date", "total_enrollment")
+    list_filter = ("pub_date",)
+    search_fields = ("name", "description")
+
+
 class ChoiceAdmin(admin.ModelAdmin):
     list_display = ("choice_text", "question", "is_correct")
     list_filter = ("is_correct",)
     search_fields = ("choice_text",)
 
 
-@admin.register(Submission)
 class SubmissionAdmin(admin.ModelAdmin):
     list_display = ("id", "enrollment", "submitted_at")
     list_filter = ("submitted_at",)
     search_fields = ("enrollment__user__username", "enrollment__course__name")
 
 
+admin.site.register(Course, CourseAdmin)
+admin.site.register(Lesson, LessonAdmin)
 admin.site.register(Instructor)
 admin.site.register(Learner)
-admin.site.register(Enrollment)
+admin.site.register(Question, QuestionAdmin)
+admin.site.register(Choice, ChoiceAdmin)
+admin.site.register(Submission, SubmissionAdmin)
