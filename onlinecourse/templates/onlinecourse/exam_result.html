@@ -1,41 +1,103 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Exam Results - {{ course.name }}</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Exam Results - {{ course.name }}</title>
+
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+    >
 </head>
+
 <body class="bg-light">
-<nav class="navbar navbar-dark bg-primary"><a class="navbar-brand" href="{% url 'onlinecourse:index' %}">OnlineCourse</a></nav>
-<main class="container py-4">
-  <section class="card shadow-sm mb-4">
-    <div class="card-body">
-      <h1 class="h3">Exam Results: {{ course.name }}</h1>
-      {% if grade >= 80 %}<div class="alert alert-success"><strong>Congratulations!</strong> You passed.</div>
-      {% else %}<div class="alert alert-warning">Review your answers and try again.</div>{% endif %}
-      <p class="lead">Score: {{ total_score }} / {{ possible_score }} ({{ grade|floatformat:0 }}%)</p>
-    </div>
-  </section>
-  <h2 class="h4 mb-3">Answer review</h2>
-  {% for result in results %}
-    <section class="card shadow-sm mb-3">
-      <div class="card-header">Question {{ forloop.counter }} — {{ result.score }} / {{ result.question.grade }}</div>
-      <div class="card-body">
-        <p>{{ result.question.question_text }}</p>
-        <ul class="list-group">
-          {% for choice in result.choices %}
-            <li class="list-group-item {% if choice.id in result.correct_ids %}list-group-item-success{% elif choice.id in result.selected_ids %}list-group-item-danger{% endif %}">
-              {{ choice.choice_text }}
-              {% if choice.id in result.correct_ids %}<span class="badge badge-success">Correct answer</span>{% endif %}
-              {% if choice.id in result.selected_ids %}<span class="badge badge-primary">Your answer</span>{% endif %}
-            </li>
-          {% endfor %}
-        </ul>
-      </div>
-    </section>
-  {% endfor %}
-  <a class="btn btn-primary" href="{% url 'onlinecourse:course_details' course.id %}">Back to course</a>
-</main>
+    <nav class="navbar navbar-dark bg-primary">
+        <a class="navbar-brand" href="{% url 'onlinecourse:index' %}">
+            OnlineCourse
+        </a>
+    </nav>
+
+    <main class="container py-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h1 class="h3">Exam Results</h1>
+                <h2 class="h5 text-muted">{{ course.name }}</h2>
+
+                <div class="alert alert-info">
+                    <strong>Your Score:</strong>
+                    {{ total_score }} / {{ possible_score }}
+                    ({{ grade|floatformat:0 }}%)
+                </div>
+
+                {% if grade >= 80 %}
+                    <div class="alert alert-success">
+                        Congratulations! You performed well.
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        Keep practising and try again.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <h2 class="h4 mb-3">Review Your Answers</h2>
+
+        {% for result in results %}
+            <div class="card shadow-sm mb-3">
+                <div class="card-header">
+                    <strong>Question {{ forloop.counter }}</strong>
+                    <span class="float-right">
+                        {{ result.score }} / {{ result.question.grade }} marks
+                    </span>
+                </div>
+
+                <div class="card-body">
+                    <p class="font-weight-bold">
+                        {{ result.question.question_text }}
+                    </p>
+
+                    <ul class="list-group">
+                        {% for choice in result.choices %}
+                            <li class="list-group-item
+                                {% if choice.id in result.correct_ids %}
+                                    list-group-item-success
+                                {% elif choice.id in result.selected_ids %}
+                                    list-group-item-danger
+                                {% endif %}">
+
+                                {{ choice.choice_text }}
+
+                                {% if choice.id in result.correct_ids %}
+                                    <span class="badge badge-success">
+                                        Correct answer
+                                    </span>
+                                {% endif %}
+
+                                {% if choice.id in result.selected_ids %}
+                                    <span class="badge badge-primary">
+                                        Your selection
+                                    </span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% empty %}
+            <div class="alert alert-info">
+                No exam questions are available for this course.
+            </div>
+        {% endfor %}
+
+        <a
+            class="btn btn-primary mt-3"
+            href="{% url 'onlinecourse:course_details' course.id %}"
+        >
+            Back to Course
+        </a>
+    </main>
 </body>
 </html>
