@@ -5,7 +5,10 @@ from django.utils.timezone import now
 
 
 class Instructor(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
     full_time = models.BooleanField(default=True)
     total_learners = models.IntegerField(default=0)
 
@@ -26,8 +29,15 @@ class Learner(models.Model):
         (DATABASE_ADMIN, "Database Admin"),
     ]
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    occupation = models.CharField(max_length=20, choices=OCCUPATION_CHOICES, default=STUDENT)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+    occupation = models.CharField(
+        max_length=20,
+        choices=OCCUPATION_CHOICES,
+        default=STUDENT,
+    )
     social_link = models.URLField(max_length=200, blank=True)
 
     def __str__(self):
@@ -36,7 +46,11 @@ class Learner(models.Model):
 
 class Course(models.Model):
     name = models.CharField(max_length=30, default="online course")
-    image = models.ImageField(upload_to="course_images/", blank=True, null=True)
+    image = models.ImageField(
+        upload_to="course_images/",
+        blank=True,
+        null=True,
+    )
     description = models.CharField(max_length=1000, blank=True)
     pub_date = models.DateField(null=True, blank=True)
     instructors = models.ManyToManyField(Instructor, blank=True)
@@ -55,7 +69,11 @@ class Course(models.Model):
 class Lesson(models.Model):
     title = models.CharField(max_length=200, default="title")
     order = models.IntegerField(default=0)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="lessons")
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="lessons",
+    )
     content = models.TextField(blank=True)
 
     def __str__(self):
@@ -73,10 +91,20 @@ class Enrollment(models.Model):
         (BETA, "BETA"),
     ]
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+    )
     date_enrolled = models.DateField(default=now)
-    mode = models.CharField(max_length=5, choices=COURSE_MODES, default=AUDIT)
+    mode = models.CharField(
+        max_length=5,
+        choices=COURSE_MODES,
+        default=AUDIT,
+    )
     rating = models.FloatField(default=5.0)
 
     def __str__(self):
@@ -84,7 +112,11 @@ class Enrollment(models.Model):
 
 
 class Question(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="questions")
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="questions",
+    )
     question_text = models.CharField(max_length=1000)
     grade = models.IntegerField(default=1)
 
@@ -93,15 +125,26 @@ class Question(models.Model):
 
     def is_get_score(self, selected_ids):
         correct_ids = set(
-            self.choices.filter(is_correct=True).values_list("id", flat=True)
+            self.choices.filter(is_correct=True).values_list(
+                "id",
+                flat=True,
+            )
         )
         selected_ids = {int(choice_id) for choice_id in selected_ids}
-        return self.grade if correct_ids and selected_ids == correct_ids else 0
+
+        if correct_ids and selected_ids == correct_ids:
+            return self.grade
+
+        return 0
 
 
 class Choice(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="choices")
-    choice_text = models.CharField(max_length=1000)
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.CASCADE,
+        related_name="choices",
+    )
+    choice_text = models.CharField(max_length=100)
     is_correct = models.BooleanField(default=False)
 
     def __str__(self):
@@ -110,10 +153,16 @@ class Choice(models.Model):
 
 class Submission(models.Model):
     enrollment = models.ForeignKey(
-        Enrollment, on_delete=models.CASCADE, related_name="submissions"
+        Enrollment,
+        on_delete=models.CASCADE,
+        related_name="submissions",
     )
-    choices = models.ManyToManyField(Choice, related_name="submissions", blank=True)
+    choices = models.ManyToManyField(
+        Choice,
+        related_name="submissions",
+        blank=True,
+    )
     submitted_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return str(self.enrollment.id)
+        return f"Submission {self.id} for {self.enrollment}"
