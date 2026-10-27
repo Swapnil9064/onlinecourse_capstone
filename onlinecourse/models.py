@@ -1,3 +1,4 @@
+
 from django.conf import settings
 from django.db import models
 from django.utils.timezone import now
@@ -17,12 +18,14 @@ class Learner(models.Model):
     DEVELOPER = "developer"
     DATA_SCIENTIST = "data_scientist"
     DATABASE_ADMIN = "dba"
+
     OCCUPATION_CHOICES = [
         (STUDENT, "Student"),
         (DEVELOPER, "Developer"),
         (DATA_SCIENTIST, "Data Scientist"),
         (DATABASE_ADMIN, "Database Admin"),
     ]
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     occupation = models.CharField(max_length=20, choices=OCCUPATION_CHOICES, default=STUDENT)
     social_link = models.URLField(max_length=200, blank=True)
@@ -37,7 +40,11 @@ class Course(models.Model):
     description = models.CharField(max_length=1000, blank=True)
     pub_date = models.DateField(null=True, blank=True)
     instructors = models.ManyToManyField(Instructor, blank=True)
-    users = models.ManyToManyField(settings.AUTH_USER_MODEL, through="Enrollment", related_name="enrolled_courses")
+    users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        through="Enrollment",
+        related_name="enrolled_courses",
+    )
     total_enrollment = models.IntegerField(default=0)
     is_enrolled = False
 
@@ -59,7 +66,13 @@ class Enrollment(models.Model):
     AUDIT = "audit"
     HONOR = "honor"
     BETA = "BETA"
-    COURSE_MODES = [(AUDIT, "Audit"), (HONOR, "Honor"), (BETA, "BETA")]
+
+    COURSE_MODES = [
+        (AUDIT, "Audit"),
+        (HONOR, "Honor"),
+        (BETA, "BETA"),
+    ]
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     date_enrolled = models.DateField(default=now)
@@ -79,7 +92,9 @@ class Question(models.Model):
         return self.question_text
 
     def is_get_score(self, selected_ids):
-        correct_ids = set(self.choices.filter(is_correct=True).values_list("id", flat=True))
+        correct_ids = set(
+            self.choices.filter(is_correct=True).values_list("id", flat=True)
+        )
         selected_ids = {int(choice_id) for choice_id in selected_ids}
         return self.grade if correct_ids and selected_ids == correct_ids else 0
 
@@ -94,7 +109,9 @@ class Choice(models.Model):
 
 
 class Submission(models.Model):
-    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE, related_name="submissions")
+    enrollment = models.ForeignKey(
+        Enrollment, on_delete=models.CASCADE, related_name="submissions"
+    )
     choices = models.ManyToManyField(Choice, related_name="submissions", blank=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
 
